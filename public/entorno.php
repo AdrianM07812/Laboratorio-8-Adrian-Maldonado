@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/../lib/estudiante.php';
+
+$est = cargar_estudiante();
+$cfg = require __DIR__ . '/../config/db.php';
+
+// Pasamos los valores que vienen del archivo de configuración
+$db = new mysqli($cfg['host'], $cfg['user'], $cfg['password'], $cfg['name'], (int) $cfg['port']);
+// Con $db->query('SELECT ...')->fetch_row()[0] obtienes un valor escalar.
+
+// Si NO es consola, avisa que la respuesta es JSON:
+if (PHP_SAPI !== 'cli') { header('Content-Type: application/json; charset=utf-8'); }
+echo json_encode([ 
+    'php_version' => PHP_VERSION,
+    'sapi' => php_sapi_name(),
+    'os_family' => PHP_OS_FAMILY,
+    'servidor' => $_SERVER['SERVER_SOFTWARE'] ?? 'cli',
+    'mysqli' => extension_loaded('mysqli'),
+    'db_version' => $db->query('SELECT VERSION()')->fetch_row()[0],
+    'db_nombre' => $db->query('SELECT DATABASE()')->fetch_row()[0],
+    'filas' => (int) $db->query('SELECT COUNT(*) FROM estudiantes')->fetch_row()[0],
+    'token' => substr(hash('sha256', $est['cedula'] . '|' . $est['github_user'] . '|WEB2026-L8'), 0, 10) 
+], JSON_PRETTY_PRINT);
